@@ -13,7 +13,10 @@ say "geographically accurate, stylized").
   (on user PATH). If a shell says `npm not recognized`, run:
   `$env:Path = "$env:Path;$env:USERPROFILE\.tools\node-v22.11.0-win-x64"`
 - Run app: `npm run dev` → http://localhost:5173. Verify changes with `npm run build`.
-- No git repo initialized yet.
+- **Git and gh are also portable installs**: `~\.tools\git\cmd` and `~\.tools\gh\bin`
+  (append both to `$env:Path` like Node). gh is logged in as **revanks** via the
+  Windows keyring. Remote: https://github.com/revanks/silkboard-3d-digital-twin
+  (public, branch `main`).
 
 ## Current state (all working, verified via build)
 
