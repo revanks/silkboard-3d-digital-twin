@@ -14,6 +14,10 @@ import { CFG } from '../config.js'
 // rain stays soft and diffuse.
 const BLOOM = { day: CFG.BLOOM_INTENSITY, night: 1.15, rain: 0.45 }
 
+// Video-capture tour (?tour=1) needs every camera distance sharp — the
+// fixed-focus DoF blurs the wide shots.
+const TOUR_MODE = new URLSearchParams(window.location.search).has('tour')
+
 export default function Effects({ envMode = 'day' }) {
   return (
     <EffectComposer multisampling={4}>
@@ -30,7 +34,7 @@ export default function Effects({ envMode = 'day' }) {
         luminanceThreshold={1.0}
         levels={7}
       />
-      {CFG.ENABLE_DOF && (
+      {CFG.ENABLE_DOF && !TOUR_MODE && (
         <DepthOfField
           target={[0, 8, 0]}
           focalLength={0.08}

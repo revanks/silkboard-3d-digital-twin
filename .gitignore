@@ -3,3 +3,8 @@ dist
 .env
 .env.local
 .claude/settings.local.json
+
+# Large generated demo recordings -- exceeds GitHub's 100MB single-file push limit (media/
+# silkboard_digital_twin_tour.mp4 is ~230MB); regenerate locally via the ?tour=1 capture mode
+# (see TourRig.jsx) rather than committing captured video.
+media/

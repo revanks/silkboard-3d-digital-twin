@@ -153,6 +153,96 @@ camera distance), merge geometry per tile, LOD: drop windows/traffic on far
 tiles. Whole city needs a different data path (Geofabrik extract + osmium
 preprocessing instead of Overpass).
 
+## Video tour pipeline (media/silkboard_digital_twin_tour.mp4)
+
+`?tour=1` swaps OrbitControls for `src/scene/TourRig.jsx` (generic keyframe
+interpolator; recorder injects `window.__tourPlan` segments + calls
+`window.__startTour()`; state on `window.__tourState`) and disables DoF in
+`Effects.jsx` (blurs wide shots). Scratchpad pipeline (this session's
+scratchpad): `makevo.mjs` (msedge-tts, en-IN-NeerjaNeural, 8 chapters) →
+`plan.mjs` (chapter camera keys + VO-timed segments → tour_plan.json) →
+`mixvo.mjs` (adelay/amix → vo_full.m4a) → `record.mjs` (puppeteer-core +
+headed msedge, canvas.captureStream+MediaRecorder → tour.webm via download;
+needs `protocolTimeout` ≥ tour length and `--disable-backgrounding-occluded-
+windows --disable-renderer-backgrounding --disable-background-timer-
+throttling` else an occluded window freezes rAF) → ffmpeg-static mux.
+LESSONS: camera paths must dodge the 70 m label sprites near origin;
+Madiwala Lake is at/past the map edge — the lakes/parks chapter shoots the
+east-side ponds + HSR park instead.
+
+## GridSense AI real grid integration — COMPLETE (2026-07-18)
+
+The synthetic `OsmPower.jsx` grid is now replaced (when `public/gridsense_assets.json` is present) by
+the **real** electric-distribution digital twin from the sibling project `../` (GridSense AI /
+`v2_digital_twin/`, BLR_SOUTH pilot — see that repo's own `CLAUDE.md` §7 onward). Same real Silk Board
+Junction neighbourhood, independently-fetched real GridSense OSM data, ~121 m off this scene's own
+`lat0/lon0` — reprojected through this scene's own `toXZ` formula so it lands correctly on this scene's
+existing basemap. Planned via a full `EnterPlanMode` pass in the parent GridSense session (plan file
+`C:\Users\sachin\.claude\plans\mossy-moseying-naur.md`), built and verified in 6 stages exactly like the
+OSM-mode work above.
+
+**Data pipeline (lives in the sibling repo, not here):** `v2_digital_twin/threejs_export.py` +
+`export_threejs_grid.py` reproject GridSense's 9 real physical layers + join the 5 feature-store
+attribute CSVs, write `public/gridsense_assets.json` here (~3.45 MB; real counts 1 substation / 3
+feeders / 3 reclosers / 9 sectionalizers / 40 transformers / 8,668 poles / 5,972 LT lines / 5,837
+service drops / 5,837 meters). Re-run that script from the parent repo whenever GridSense's own pipeline
+output changes — this JSON is a snapshot, not live-synced.
+
+**New `src/data/useGridAssets.js`** — mirrors `useOsmData.js`'s exact null-on-any-failure pattern.
+
+**New `src/scene/grid/`** (parallel to `scene/osm/`): `gridColors.js` (ports the parent repo's own
+`dashboard/map_layers.py` `SEQUENTIAL_RAMP_HEX`/`CUSTOMER_TYPE_COLORS` verbatim), `relief.js` (real
+elevation 872–912 m compressed ×0.12 so it reads as subtle relief without detaching from this scene's
+flat `Ground.jsx`), `ribbonBuilder.js` (generalizes `OsmPower.jsx`'s sagging-ribbon technique into a
+reusable merged-`BufferGeometry` builder that ALSO emits a parallel `faceRecordIndex` array — this is
+what makes individual LT-line/service-drop clicks resolvable on one merged mesh; the one genuinely new
+technique this needed beyond what already existed), `GridPoles.jsx` (real material color via
+`setColorAt`, same idiom as `OsmBuildings.jsx`'s `ShopInstances`), `GridLtLines.jsx`/
+`GridServiceDrops.jsx` (real per-edge attach height/length), `GridTransformers.jsx` (tank size bucketed
+by real BESCOM kVA, color reflects real `peak_hotspot_temperature`), `GridSubstation.jsx` (hero
+treatment reusing `OsmHighlights.jsx`'s pulsing-glow/beacon/`Label` idiom for the one real substation),
+`GridSwitchgear.jsx` (12 individual meshes, reclosers+sectionalizers), `GridMeters.jsx`, `GridNetwork.jsx`
+(top-level wrapper).
+
+**New `src/ui/GridInspectPanel.jsx`** — ONE generic panel every asset type's click opens
+(`{assetType, record}` → real fields per a lookup table), not a panel per type. **New
+`src/ui/GridStats.jsx`** — fleet-wide summary computed client-side from the loaded JSON (asset counts,
+avg health per type, total customers/kVA, Active/Maint/Decom split).
+
+**New `src/data/useLiveWeather.js`** — mirrors `useLiveTraffic.js`'s live/demo pattern but hits
+Open-Meteo's **forecast** endpoint (not GridSense's own archive-endpoint helper, which has a 5-day lag),
+no key needed. DEMO fallback derives day/night from the real current IST clock (`Asia/Kolkata`
+explicitly, regardless of the browser's own timezone) so it stays time-correct fully offline. New
+`weatherStore` in `trafficStore.js` (same mutable-object pattern as `env`/`flow`/`sim`). `App.jsx` gained
+a 4th `envMode` value `'live'`: `effectiveEnvMode` derives day/night/rain from real weather+time and is
+what actually gets passed to `CityScene`/`Effects` — `Lighting.jsx` needs zero changes, it never learns
+a "live" mode exists. The existing manual DAY/NIGHT/RAIN toggles are untouched (kept manual on purpose —
+the tour-recording pipeline above depends on deterministic manual mode control).
+
+**Verification** (real headed-browser checks, not assumed): parked the camera at known real asset
+coordinates (temp edit to `config.js` `CAMERA_START`/`CAMERA_TARGET`, always reverted after) and clicked
+each — pole `PL_BLR_SOUTH_000001`, LT line `LT_BLR_SOUTH_003416` (merged-mesh face-index resolution),
+transformer `TX_BLR_SOUTH_000001`, substation `SUB_BLR_SOUTH_000001`, recloser
+`RCL_BLR_SOUTH_000001`, meter `MTR_BLR_SOUTH_000001` — every field matched the source JSON exactly,
+including the transformer's amber warning-tier tank color at its real 95°C hotspot. Confirmed a real
+`api.open-meteo.com/v1/forecast` call returns 200 and LIVE mode correctly rendered night at the real
+current time (01:25 IST); blocked the API entirely and the DEMO fallback also correctly showed night
+(derived from the real clock, not the network). Cycled every env mode × every color mode × cinematic ×
+top view × reset × grid on/off × a click in one sequence — zero console errors.
+
+LESSON: `CameraRig.jsx`'s `topView` toggle snaps `CAMERA_START`/`CAMERA_TARGET` to hardcoded values on
+**every** toggle, including toggling it back off — don't touch TOP VIEW mid-verification-sequence if
+you've manually panned/zoomed, it silently discards the camera state.
+
+**Known, deliberate gap**: feeders (3 real 11kV backbones) have no dedicated 3D geometry — GridSense
+never modeled real conductor attachment-height/material for them, only for pole/transformer/lt_line/
+service_drop/meter. Feeder membership only drives the "FEEDER" color-mode grouping on poles/transformers.
+Confirmed as a deliberate honesty choice (via `AskUserQuestion` in the parent session), not an oversight.
+
+**Repo note**: this folder has its own `.gitignore`'d `media/` now (added this session — a pre-existing
+~230 MB `media/silkboard_digital_twin_tour.mp4` exceeds GitHub's 100 MB single-file push limit;
+regenerate via the tour pipeline above if needed, don't commit captured video).
+
 ## Working agreements
 
 - One stage per iteration; user judges a screenshot before the next stage.

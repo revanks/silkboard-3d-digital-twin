@@ -5,7 +5,7 @@ function fmtTime(d) {
   return d ? d.toLocaleTimeString('en-IN', { hour12: false }) : '—'
 }
 
-export default function HUD({ live, osmActive = false, inspectOpen, onCloseInspect }) {
+export default function HUD({ live, osmActive = false, gridActive = false, inspectOpen, onCloseInspect }) {
   const { data, mode, hasKey, wantLive, setWantLive } = live
 
   // Poll the sim's modelled counters at ~1.5 Hz (no per-frame React churn).
@@ -87,6 +87,9 @@ export default function HUD({ live, osmActive = false, inspectOpen, onCloseInspe
         <div className="hud-note dim">updated {fmtTime(data.updatedAt)} · click the junction to inspect</div>
         {osmActive && (
           <div className="hud-note dim">map data © OpenStreetMap contributors (ODbL)</div>
+        )}
+        {gridActive && (
+          <div className="hud-note dim">grid asset data: GridSense AI digital twin (engineering-simulated)</div>
         )}
       </div>
 

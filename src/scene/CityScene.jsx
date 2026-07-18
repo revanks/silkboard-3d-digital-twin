@@ -21,7 +21,16 @@ const FOG = {
   rain: ['#8d949e', 0.0022],
 }
 
-export default function CityScene({ envMode = 'day', topView = false, onJunctionClick, osm = null }) {
+export default function CityScene({
+  envMode = 'day',
+  topView = false,
+  onJunctionClick,
+  osm = null,
+  grid = null,
+  showGrid = true,
+  colorMode = 'realistic',
+  onAssetClick,
+}) {
   const sun = sunDirection()
   const base = envMode === 'day' ? [CFG.FOG_COLOR, CFG.FOG_DENSITY] : FOG[envMode]
   // Thin the haze in top view so the whole 2×2 km stays readable.
@@ -53,7 +62,14 @@ export default function CityScene({ envMode = 'day', topView = false, onJunction
       <Ground />
       {osm ? (
         // Real OSM data: roads, buildings, water, metro, traffic, lights, power.
-        <OsmWorld osm={osm} envMode={envMode} />
+        <OsmWorld
+          osm={osm}
+          envMode={envMode}
+          grid={grid}
+          showGrid={showGrid}
+          colorMode={colorMode}
+          onAssetClick={onAssetClick}
+        />
       ) : (
         // Procedural fallback — always works, even with no JSON.
         <>

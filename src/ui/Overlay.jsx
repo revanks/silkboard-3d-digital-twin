@@ -5,8 +5,14 @@ const MODES = [
   ['day', '☀ DAY'],
   ['night', '☾ NIGHT'],
   ['rain', '☂ RAIN'],
+  ['live', '◐ LIVE'],
 ]
 const SPEEDS = [1, 10, 60]
+const COLOR_MODES = [
+  ['realistic', 'REALISTIC'],
+  ['risk', 'RISK'],
+  ['feeder', 'FEEDER'],
+]
 
 export default function Overlay({
   cinematic,
@@ -18,6 +24,11 @@ export default function Overlay({
   setSpeed,
   topView,
   setTopView,
+  gridActive = false,
+  showGrid,
+  setShowGrid,
+  colorMode,
+  setColorMode,
 }) {
   return (
     <div className="overlay">
@@ -54,6 +65,22 @@ export default function Overlay({
           ⊙ TOP VIEW
         </button>
         <button onClick={onResetView}>⌖ RESET VIEW</button>
+        {gridActive && (
+          <>
+            <button className={showGrid ? 'active' : ''} onClick={() => setShowGrid((v) => !v)}>
+              ⚡ GRID {showGrid ? 'ON' : 'OFF'}
+            </button>
+            {showGrid && (
+              <div className="btn-group">
+                {COLOR_MODES.map(([m, label]) => (
+                  <button key={m} className={colorMode === m ? 'active' : ''} onClick={() => setColorMode(m)}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
+        )}
         <button
           className={cinematic ? 'active' : ''}
           onClick={() => setCinematic((v) => !v)}

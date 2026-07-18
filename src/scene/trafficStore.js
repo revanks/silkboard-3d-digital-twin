@@ -23,6 +23,10 @@ export const stats = { total: 0, idle: 0 }
 // so the render loop can read it without prop drilling.
 export const env = { mode: 'day' }
 
+// Real "right now" weather for the scene's location (Open-Meteo), mirrored from React state the same
+// way `env` is — read by anything that wants live conditions without prop drilling.
+export const weatherStore = { isDay: true, condition: 'clear', tempC: 28, source: 'DEMO' }
+
 export function stepSignal(dt) {
   signal.t += dt
   while (signal.t >= PHASES[signal.idx].dur) {

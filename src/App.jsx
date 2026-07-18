@@ -4,12 +4,20 @@ import * as THREE from 'three'
 import CityScene from './scene/CityScene.jsx'
 import Effects from './scene/Effects.jsx'
 import CameraRig from './scene/CameraRig.jsx'
+import TourRig from './scene/TourRig.jsx'
 import Overlay from './ui/Overlay.jsx'
 import HUD from './ui/HUD.jsx'
+import GridInspectPanel from './ui/GridInspectPanel.jsx'
+import GridStats from './ui/GridStats.jsx'
 import { useLiveTraffic } from './data/useLiveTraffic.js'
 import { useOsmData } from './data/useOsmData.js'
-import { flow, sim, env } from './scene/trafficStore.js'
+import { useGridAssets } from './data/useGridAssets.js'
+import { useLiveWeather } from './data/useLiveWeather.js'
+import { flow, sim, env, weatherStore } from './scene/trafficStore.js'
 import { CFG } from './config.js'
+
+// ?tour=1 → scripted camera tour for video capture (see TourRig.jsx)
+const TOUR_MODE = new URLSearchParams(window.location.search).has('tour')
 
 export default function App() {
   const [cinematic, setCinematic] = useState(false)
@@ -20,10 +28,28 @@ export default function App() {
   const [topView, setTopView] = useState(false)
   const live = useLiveTraffic()
   const osm = useOsmData() // null → procedural fallback
+  const grid = useGridAssets() // null → synthetic OsmPower fallback
+  const weather = useLiveWeather()
+  const [showGrid, setShowGrid] = useState(true)
+  const [colorMode, setColorMode] = useState('realistic')
+  const [inspect, setInspect] = useState(null) // {assetType, record} | null
+
+  // 'live' isn't a real render mode -- Lighting.jsx/CityScene.jsx only ever see day/night/rain.
+  // Derive which of those three the real current weather+time maps to, so the rest of the scene
+  // needs zero changes to support it.
+  const effectiveEnvMode =
+    envMode === 'live' ? (!weather.data.isDay ? 'night' : weather.data.condition === 'rain' ? 'rain' : 'day') : envMode
 
   useEffect(() => {
-    env.mode = envMode
-  }, [envMode])
+    weatherStore.isDay = weather.data.isDay
+    weatherStore.condition = weather.data.condition
+    weatherStore.tempC = weather.data.tempC
+    weatherStore.source = weather.mode
+  }, [weather.data, weather.mode])
+
+  useEffect(() => {
+    env.mode = effectiveEnvMode
+  }, [effectiveEnvMode])
 
   useEffect(() => {
     sim.speed = speed
@@ -51,14 +77,22 @@ export default function App() {
       >
         <Suspense fallback={null}>
           <CityScene
-            envMode={envMode}
+            envMode={effectiveEnvMode}
             topView={topView}
             onJunctionClick={() => setInspectOpen(true)}
             osm={osm}
+            grid={grid}
+            showGrid={showGrid}
+            colorMode={colorMode}
+            onAssetClick={(assetType, record) => setInspect({ assetType, record })}
           />
-          <Effects envMode={envMode} />
+          <Effects envMode={effectiveEnvMode} />
         </Suspense>
-        <CameraRig cinematic={cinematic} resetSignal={resetSignal} topView={topView} />
+        {TOUR_MODE ? (
+          <TourRig setEnvMode={setEnvMode} />
+        ) : (
+          <CameraRig cinematic={cinematic} resetSignal={resetSignal} topView={topView} />
+        )}
       </Canvas>
       <Overlay
         cinematic={cinematic}
@@ -73,13 +107,21 @@ export default function App() {
         setSpeed={setSpeed}
         topView={topView}
         setTopView={setTopView}
+        gridActive={Boolean(grid)}
+        showGrid={showGrid}
+        setShowGrid={setShowGrid}
+        colorMode={colorMode}
+        setColorMode={setColorMode}
       />
       <HUD
         live={live}
         osmActive={Boolean(osm)}
+        gridActive={Boolean(grid)}
         inspectOpen={inspectOpen}
         onCloseInspect={() => setInspectOpen(false)}
       />
+      <GridInspectPanel inspect={inspect} onClose={() => setInspect(null)} />
+      {showGrid && <GridStats grid={grid} />}
     </div>
   )
 }

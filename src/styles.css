@@ -286,3 +286,47 @@ body,
   color: #8f8574;
   border-top: none;
 }
+
+/* Grid-asset inspect panel: same look as the junction .inspect panel, docked top-right below the
+   Overlay controls instead of center-left, so the two panels never overlap if both are open. */
+.grid-inspect {
+  top: 78px;
+  left: auto;
+  right: 20px;
+  bottom: auto;
+  transform: none;
+  width: 260px;
+}
+
+/* Fleet-wide stats panel, docked bottom-left above the orbit hint -- same look as .hud. */
+.grid-stats {
+  position: absolute;
+  bottom: 54px;
+  left: 20px;
+  width: 260px;
+  background: rgba(10, 8, 6, 0.72);
+  border: 1px solid rgba(255, 200, 140, 0.18);
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: #e8e2d6;
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  backdrop-filter: blur(6px);
+  pointer-events: auto;
+  z-index: 10;
+}
+.grid-stats-head {
+  font-size: 10px;
+  letter-spacing: 1.4px;
+  color: #ffd9a8;
+  margin-bottom: 8px;
+}
+.grid-stats table { width: 100%; border-collapse: collapse; }
+.grid-stats td {
+  padding: 2.5px 0;
+  color: #b8ac98;
+  font-size: 10.5px;
+}
+.grid-stats td:first-child { color: #cfc4ac; }
+.grid-stats td:nth-child(2) { text-align: right; color: #eee7d9; font-weight: 600; padding: 2.5px 8px; }
+.grid-stats td:last-child { color: #8f8574; font-size: 9.5px; }
