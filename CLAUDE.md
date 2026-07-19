@@ -7,12 +7,40 @@ Built following the staged method in `3D_City_Prompt.docx` (read it for the
 philosophy: stage it, judge visuals per stage, never claim "exact replica" —
 say "geographically accurate, stylized").
 
-## Environment quirks (Windows 11, PowerShell 5.1)
+## No-Node deployment (2026-07-20) — the primary way to RUN this on another machine
+
+Another laptop hit Node-related errors (missing `node_modules`, npm install failures). Same
+fix as the sibling GridSense AI project's `frontend/` (see that repo's CLAUDE.md §25): this
+app is 100% static once built — no backend calls at runtime, everything is either a bundled
+JS asset or a static JSON file in `public/` (`gridsense_assets.json`, `osm_silkboard.json`).
+Node is only needed to *build*, never to *run*.
+
+- **`dist/` is now committed to this repo** (`.gitignore`'s old `dist` line was removed —
+  same "silently excluded the bundle" gotcha the parent project hit, fixed the same way).
+  Rebuild + recommit `dist/` (`npm run build`, needs Node) whenever `src/` or `public/`
+  changes; a no-Node machine otherwise serves a stale build.
+- **`serve.py`** (new, stdlib-only, zero pip/npm dependencies) serves `dist/` correctly —
+  run `python serve.py [port]` (default 4173) and open the printed URL. It explicitly forces
+  correct MIME types for `.js`/`.json` (Windows' registry-derived guesses can otherwise mislabel
+  the Vite build's ES module script as `text/plain`, which browsers refuse to execute).
+- Verified end-to-end on this machine: killed the Node dev server, served purely via
+  `python serve.py`, confirmed correct `Content-Type` headers (`text/javascript` for the
+  bundle, `application/json` for both data files) and did a real headed-browser (Playwright,
+  `headless=False` — headless still hits `WebGL: CONTEXT_LOST_WEBGL` here, see below) pass:
+  scene rendered fully, real GridSense fleet summary panel showed correct live numbers (40
+  transformers / 8,668 poles / 5,972 LT lines / 5,837 service drops+meters), zero console
+  errors beyond the one pre-existing harmless favicon 404 this project already had.
+- **New-machine procedure**: copy/clone the repo (already has `dist/` committed) → install
+  Python (only) → `python serve.py` → open `http://localhost:4173/`. No `npm install`, no
+  Node install, no build step needed at all on that machine.
+
+## Environment quirks (Windows 11, PowerShell 5.1) — for DEVELOPING, not for just running it
 
 - **Node is a portable install** at `C:\Users\sachin\.tools\node-v22.11.0-win-x64`
   (on user PATH). If a shell says `npm not recognized`, run:
   `$env:Path = "$env:Path;$env:USERPROFILE\.tools\node-v22.11.0-win-x64"`
-- Run app: `npm run dev` → http://localhost:5173. Verify changes with `npm run build`.
+- Dev server (hot reload, needs Node): `npm run dev` → http://localhost:5173.
+  Verify changes with `npm run build`, then recommit `dist/` (see above).
 - **Git and gh are also portable installs**: `~\.tools\git\cmd` and `~\.tools\gh\bin`
   (append both to `$env:Path` like Node). gh is logged in as **revanks** via the
   Windows keyring. Remote: https://github.com/revanks/silkboard-3d-digital-twin
