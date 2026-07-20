@@ -3,7 +3,10 @@ node_modules
 .env.local
 .claude/settings.local.json
 
-# Large generated demo recordings -- exceeds GitHub's 100MB single-file push limit (media/
-# silkboard_digital_twin_tour.mp4 is ~230MB); regenerate locally via the ?tour=1 capture mode
-# (see TourRig.jsx) rather than committing captured video.
-media/
+# Large generated demo recordings -- most exceed GitHub's 100MB single-file push limit (the old
+# silkboard_digital_twin_tour.mp4 was ~230MB); regenerate locally via the ?tour=1 capture mode
+# (see TourRig.jsx) rather than committing captured video. One exception below: the corporate
+# narrated demo (GridSense_AI_3D_Digital_Twin_Demo.mp4, ~73MB) is small enough and was explicitly
+# requested to be committed -- see CLAUDE.md's "Corporate narrated demo video" section.
+media/*
+!media/GridSense_AI_3D_Digital_Twin_Demo.mp4
