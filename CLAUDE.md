@@ -310,6 +310,31 @@ times a second not every frame) + **thicker/bigger geometry** for visual distinc
   labels actually disappear/reappear; zero new console errors (only the pre-existing harmless favicon
   404). `npm run build` clean; `dist/` rebuilt and recommitted per the no-Node deployment note above.
 
+## Transformers made bigger + uniform vivid green (2026-07-20, same session, presentation request)
+
+Follow-up ask: transformers should be an even bigger, distinctly-colored 3D model, visible from
+anywhere in the scene, for presentation purposes.
+
+- `GridTransformers.jsx`'s `KVA_SCALE` table doubled (every `[w,h,d]` entry ×2 from the original
+  plausible-tank-size values) — presentation-driven exaggeration, not a "more realistic size" claim.
+- New `TRANSFORMER_GREEN = '#12e07a'` (exported) — in `realistic` color mode, EVERY transformer is now
+  this one uniform vivid green, no exceptions. This replaces the previous hotspot-driven amber/red
+  shift in realistic mode (that thermal signal is still fully visible via the RISK color mode, which
+  is untouched) — a deliberate simplification so transformers read as "transformer" unambiguously
+  from any distance during a presentation, rather than varying color by temperature.
+  RISK/FEEDER color modes are completely unchanged.
+- The instancedMesh's shared material now also gets an `emissive`/`emissiveIntensity` boost (green,
+  0.8) whenever `colorMode === 'realistic'` (0 in RISK/FEEDER mode, so those modes' own color language
+  isn't muddied by an unrelated green glow) — makes them visibly pop/glow rather than just being a
+  bigger flat-shaded box.
+- Label radius bumped 180→220m to match the increased at-a-distance visibility.
+- **Verified**: parked the camera at real transformer `TX_BLR_SOUTH_000001`'s exact coordinates
+  (temp `config.js` edit, reverted immediately after per the established `CameraRig`/verification
+  discipline) — confirmed a large, vividly glowing green box, clearly readable even pulled back to
+  where surrounding poles/buildings are small; other transformers elsewhere in the scene were visible
+  as small green specks from very far away, confirming the "visible from anywhere" goal. Zero new
+  console errors. `npm run build` clean; `dist/` rebuilt and recommitted.
+
 **Repo note**: this folder has its own `.gitignore`'d `media/` now (added this session — a pre-existing
 ~230 MB `media/silkboard_digital_twin_tour.mp4` exceeds GitHub's 100 MB single-file push limit;
 regenerate via the tour pipeline above if needed, don't commit captured video).

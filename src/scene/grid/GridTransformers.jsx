@@ -11,23 +11,25 @@ const MOUNT_Y = 5.5
 // Real BESCOM kVA catalog (config.py transformer_kva_options) -> plausible tank dimensions
 // [w, h, d] in metres. No real tank-dimension data exists (GridSense models capacity, not physical
 // tank size) -- larger kVA ratings get visibly larger tanks, a real-world-plausible assumption.
+// Doubled from the original values (2026-07-20, presentation request): transformers should read as
+// unmistakably distinct objects from across the scene, not blend in at normal building scale.
 const KVA_SCALE = {
-  63: [0.7, 0.9, 1.0], 100: [0.75, 1.0, 1.1], 160: [0.85, 1.1, 1.2], 200: [0.9, 1.2, 1.3],
-  250: [1.0, 1.3, 1.4], 315: [1.05, 1.4, 1.5], 500: [1.2, 1.6, 1.7], 630: [1.3, 1.7, 1.8],
+  63: [1.4, 1.8, 2.0], 100: [1.5, 2.0, 2.2], 160: [1.7, 2.2, 2.4], 200: [1.8, 2.4, 2.6],
+  250: [2.0, 2.6, 2.8], 315: [2.1, 2.8, 3.0], 500: [2.4, 3.2, 3.4], 630: [2.6, 3.4, 3.6],
 }
 function scaleFor(kva) {
-  return KVA_SCALE[kva] ?? [1.0, 1.3, 1.4]
+  return KVA_SCALE[kva] ?? [2.0, 2.6, 2.8]
 }
+
+// Uniform vivid, saturated green -- presentation request: every transformer should read clearly as
+// "transformer" from any distance, not shift color by hotspot (that thermal signal is still visible
+// via the RISK color mode instead).
+export const TRANSFORMER_GREEN = '#12e07a'
 
 function tankColor(rec, colorMode, riskRange) {
   if (colorMode === 'risk') return riskColor(rec.risk, riskRange)
   if (colorMode === 'feeder') return feederColor(rec.feeder)
-  // Realistic mode: standard Indian distribution-transformer tank green, shifting to amber/red as
-  // the real peak_hotspot_temperature attribute rises into an overheating band.
-  const hot = rec.hot ?? 60
-  if (hot > 100) return '#c0392b'
-  if (hot > 85) return '#e08b2b'
-  return '#3f5a44'
+  return TRANSFORMER_GREEN
 }
 
 export default function GridTransformers({ grid, colorMode, onAssetClick, showLabels = true }) {
@@ -74,10 +76,15 @@ export default function GridTransformers({ grid, colorMode, onAssetClick, showLa
         }}
       >
         <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial roughness={0.6} metalness={0.35} />
+        <meshStandardMaterial
+          roughness={0.45}
+          metalness={0.2}
+          emissive={colorMode === 'realistic' ? TRANSFORMER_GREEN : '#000000'}
+          emissiveIntensity={colorMode === 'realistic' ? 0.8 : 0}
+        />
       </instancedMesh>
       {showLabels && (
-        <AssetIdLabels items={items} getPos={getPos} getColor={getColor} radius={180} maxCount={40} labelHeight={2.2} />
+        <AssetIdLabels items={items} getPos={getPos} getColor={getColor} radius={220} maxCount={40} labelHeight={2.2} />
       )}
     </>
   )
