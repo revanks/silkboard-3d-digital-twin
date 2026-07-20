@@ -358,6 +358,64 @@ TomTom API key..." banner -- unnecessary permanent screen-space clutter for pres
   GridSense AI Fleet Summary panel (bottom-left, real data) is untouched. Zero new console errors.
   `npm run build` clean; `dist/` rebuilt and recommitted.
 
+## Corporate narrated demo video (2026-07-20) — `media/GridSense_AI_3D_Digital_Twin_Demo.mp4`
+
+Full end-to-end narrated walkthrough covering every real asset type and count (1 substation, 3
+feeders, 3 reclosers, 9 sectionalizers, 40 transformers, 8,668 poles, 5,972 LT lines, 5,837 service
+drops, 5,837 meters) plus the preventive-maintenance logic (ML failure risk + priority score,
+real-time scenario/outage intelligence) — same Indian-female TTS voice as the sibling GridSense AI
+project's own demo (`en-IN-NeerjaNeural`, see the parent repo's CLAUDE.md §22.2). 1600×900, ~3:05,
+73 MB. **Not committed** — same reasoning as the pre-existing `media/` gitignore comment (large
+generated video, regenerable), even though this one happens to be under GitHub's 100 MB limit.
+
+Rebuilt on the existing `TourRig.jsx`/`?tour=1` pipeline (§ "Video tour pipeline" above), but with a
+simpler, more robust recording method than the old `record.mjs`/MediaRecorder approach: **Playwright
+Python's own `record_video_dir`** (screen-records the real rendered viewport via CDP, no
+`canvas.captureStream` wiring needed) — headed Chromium (`headless=False`, the standing WebGL
+finding still applies), UI feature toggles driven by real `page.get_by_role("button", name=...)
+.click()` calls on the actual Overlay buttons (`RISK` at the preventive-maintenance segment,
+`REALISTIC` at the close) rather than any source-code hook, and a small injected `#demoCaption` DOM
+element (position:fixed, top-center, dark glass card) updated via `page.evaluate()` in sync with the
+narration timeline — no source changes needed anywhere in `src/`.
+
+**Narration**: 10 segments generated individually via `edge_tts.Communicate(text, "en-IN-NeerjaNeural",
+rate="-4%")`, each segment's real duration measured by parsing `ffmpeg -i`'s stderr (no `ffprobe`
+binary available, `imageio_ffmpeg` only bundles `ffmpeg`), then concatenated with fixed 0.45s silence
+gaps via an `ffmpeg -filter_complex concat` chain (not the `-f concat` demuxer, which is finicky
+about matching codecs across separately-encoded mp3 files) into one narration track. Camera keyframes
+(hand-picked real waypoints, not scripted blind) per segment: substation at `SUB_BLR_SOUTH_000001`
+real coords (-250.6, 86.3), nearest transformer to origin `TX_BLR_SOUTH_000020` at (123.6, -12.8),
+nearest pole `PL_BLR_SOUTH_004491` at (-3.8, 3.5) — all pulled directly from `gridsense_assets.json`
+via a one-off Node query, not guessed. `TourRig`'s smoothstep interpolation handles the actual
+in-between motion from each segment's own `pos0/tgt0 → pos1/tgt1`.
+
+**One real gotcha worth remembering if this is ever rebuilt**: Playwright's `record_video_dir`
+timeline starts at **page/context creation**, not at `window.__startTour()` — the real recorded
+video has a ~6s head start (page load + `wait_for_selector` + a deliberate 2.5s settle sleep for
+OSM/grid data + textures) before the tour's own `t=0`. A frame pulled from the raw video at
+"nominal tour time T" is actually showing tour-internal time `T - ~6s`. This was caught during this
+session's own QA (a frame that should have shown the final `REALISTIC`-mode click already applied
+still showed `RISK` mode) — resolved by checking the real muxed MP4's total duration (3:05.64) against
+the tour's own computed total (177.6s + 2s tail) to back out the exact offset, then re-checking frames
+near the video's true end. Not a bug in the click/caption mechanism itself, just an offset to account
+for when eyeballing extracted frames against a hand-written timeline. The separately-noticed reddish
+diagonal lines in several frames are the pre-existing Metro Blue Line (under-construction) markers,
+unrelated to grid asset coloring — not a RISK-mode-not-reverting bug either, initially mistaken for one.
+
+Audio/video mux: `ffmpeg -c:v libx264 -pix_fmt yuv420p -crf 20 -c:a aac -b:a 160k -movflags +faststart`.
+No `-shortest` — narration (177.15s) is ~2.5s shorter than the video (which runs the extra tail so the
+closing golden-hour shot holds instead of cutting off mid-motion), so the last couple of seconds play
+silent by design, not a bug.
+
+Build scripts (`segments.json`, `make_narration.py`, `build_plan.py`, `record.py`, `mux.py`) lived in
+this session's scratchpad temp directory and were **not** saved into the repo — same throwaway-tooling
+convention as the sibling GridSense AI project's own doc/demo generation scripts. Reproducing this
+video means re-writing the same small pipeline (10 narration segments with camera keyframes → TTS →
+Playwright headed record with UI-button-driven mode switches → ffmpeg mux), following this section's
+description, or extending the older `record.mjs`/puppeteer pipeline described above — either works,
+this session's approach was simply more robust to build from scratch than reconstructing the
+undocumented old JS toolchain.
+
 ## Working agreements
 
 - One stage per iteration; user judges a screenshot before the next stage.
