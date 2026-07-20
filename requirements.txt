@@ -1,0 +1,11 @@
+# Python dependencies for 3D_City.
+#
+# There are none. serve.py (the zero-dependency static file server used to
+# run the pre-built app without Node.js -- see SETUP.md) only imports the
+# Python standard library (http.server, os, socketserver, sys). This file
+# exists purely so `pip install -r requirements.txt` is a valid, harmless
+# no-op step on a new machine, and so the setup docs have something to point
+# at -- do not add packages here unless serve.py itself starts needing one.
+#
+# Everything else in this sub-project (the actual 3D scene) is a Node.js/
+# npm project -- see package.json and SETUP.md for the JS dependency list.
