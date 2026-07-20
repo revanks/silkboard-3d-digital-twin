@@ -339,6 +339,25 @@ anywhere in the scene, for presentation purposes.
 ~230 MB `media/silkboard_digital_twin_tour.mp4` exceeds GitHub's 100 MB single-file push limit;
 regenerate via the tour pipeline above if needed, don't commit captured video).
 
+## Removed the persistent "demo data" traffic HUD panel (2026-07-20)
+
+User asked to remove the bottom-right corner panel (DEMO DATA/TRY LIVE, JUNCTION HEALTH, FLOW, DELAY,
+CONFIDENCE, VEHICLES, QUEUED, CO2 (IDLING), the notes underneath) and its "Showing demo data — add your
+TomTom API key..." banner -- unnecessary permanent screen-space clutter for presentation use.
+
+- `HUD.jsx` gutted down to just the on-demand click-to-inspect junction detail table (opens only when
+  the user clicks the junction; kept since it doesn't cost persistent space). All the
+  always-rendered `.hud`/`.banner` JSX and its backing calculations (score/ratio/tti/co2/sim polling)
+  were removed as dead code, not just hidden via CSS.
+- `App.jsx`'s `<HUD>` call dropped the now-unused `osmActive`/`gridActive` props.
+- The shared `hud-btn`/`inspect`/`inspect-head`/`th` CSS classes were left alone in `styles.css` --
+  `GridInspectPanel.jsx` and `GridStats.jsx` both still use them, confirmed via a repo-wide grep before
+  touching anything.
+- **Verified**: headed Playwright load, `document.querySelectorAll('.hud').length === 0` and
+  `.banner` too, screenshot confirms the corner panel and banner are gone while the unrelated
+  GridSense AI Fleet Summary panel (bottom-left, real data) is untouched. Zero new console errors.
+  `npm run build` clean; `dist/` rebuilt and recommitted.
+
 ## Working agreements
 
 - One stage per iteration; user judges a screenshot before the next stage.

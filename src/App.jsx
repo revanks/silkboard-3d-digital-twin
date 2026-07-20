@@ -119,8 +119,6 @@ export default function App() {
       />
       <HUD
         live={live}
-        osmActive={Boolean(osm)}
-        gridActive={Boolean(grid)}
         inspectOpen={inspectOpen}
         onCloseInspect={() => setInspectOpen(false)}
       />
