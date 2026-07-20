@@ -14,7 +14,7 @@ import GridNetwork from '../grid/GridNetwork.jsx'
 // The real-data city: everything sourced from the OSM extract.
 // Rendered instead of the procedural Roads/Buildings/Metro/… when the
 // JSON is available; the procedural scene remains the fallback.
-export default function OsmWorld({ osm, envMode = 'day', grid = null, showGrid = true, colorMode = 'realistic', onAssetClick }) {
+export default function OsmWorld({ osm, envMode = 'day', grid = null, showGrid = true, colorMode = 'realistic', showLabels = true, onAssetClick }) {
   // Mark which bridge-way ends actually touch down (shared ends stay
   // elevated) — roads, traffic, and lights all read the rs/re flags.
   useMemo(() => annotateBridgeRamps(osm.roads), [osm])
@@ -28,7 +28,7 @@ export default function OsmWorld({ osm, envMode = 'day', grid = null, showGrid =
       {/* Real GridSense AI grid asset data, when loaded and shown; falls back to the synthetic
           placeholder grid otherwise (missing export, or user-toggled off). */}
       {grid && showGrid ? (
-        <GridNetwork grid={grid} colorMode={colorMode} onAssetClick={onAssetClick} />
+        <GridNetwork grid={grid} colorMode={colorMode} onAssetClick={onAssetClick} showLabels={showLabels} />
       ) : (
         <OsmPower osm={osm} />
       )}

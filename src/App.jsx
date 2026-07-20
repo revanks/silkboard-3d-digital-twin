@@ -32,6 +32,7 @@ export default function App() {
   const weather = useLiveWeather()
   const [showGrid, setShowGrid] = useState(true)
   const [colorMode, setColorMode] = useState('realistic')
+  const [showLabels, setShowLabels] = useState(true)
   const [inspect, setInspect] = useState(null) // {assetType, record} | null
 
   // 'live' isn't a real render mode -- Lighting.jsx/CityScene.jsx only ever see day/night/rain.
@@ -84,6 +85,7 @@ export default function App() {
             grid={grid}
             showGrid={showGrid}
             colorMode={colorMode}
+            showLabels={showLabels}
             onAssetClick={(assetType, record) => setInspect({ assetType, record })}
           />
           <Effects envMode={effectiveEnvMode} />
@@ -112,6 +114,8 @@ export default function App() {
         setShowGrid={setShowGrid}
         colorMode={colorMode}
         setColorMode={setColorMode}
+        showLabels={showLabels}
+        setShowLabels={setShowLabels}
       />
       <HUD
         live={live}

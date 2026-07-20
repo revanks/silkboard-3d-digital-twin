@@ -2,7 +2,8 @@ import React from 'react'
 
 const TYPE_LABEL = {
   pole: 'POLE', ltLine: 'LT LINE (400V)', serviceDrop: 'SERVICE DROP', transformer: 'TRANSFORMER',
-  substation: 'SUBSTATION', recloser: 'RECLOSER', sectionalizer: 'SECTIONALIZER', meter: 'SMART METER',
+  substation: 'SUBSTATION', feeder: 'FEEDER (11kV)', recloser: 'RECLOSER', sectionalizer: 'SECTIONALIZER',
+  meter: 'SMART METER',
 }
 const MATERIAL_NAME = ['Concrete', 'Steel', 'Wooden']
 const STATUS_NAME = ['Active', 'Under Maintenance', 'Decommissioned']
@@ -48,6 +49,11 @@ const FIELD_DEFS = {
     ['nTransformers', 'Transformers Fed', (v) => `${v}`],
     ['totalKva', 'Total Installed Capacity', (v) => `${v.toLocaleString()} kVA`],
     ['totalCustomers', 'Total Customers', (v) => v.toLocaleString()],
+  ],
+  feeder: [
+    ['nTransformers', 'Transformers Fed', (v) => `${v}`],
+    ['totalKva', 'Installed Capacity', (v) => `${v.toLocaleString()} kVA`],
+    ['customers', 'Customers Served', (v) => v.toLocaleString()],
   ],
   recloser: [['feeder', 'Feeder', (v) => `#${v + 1}`]],
   sectionalizer: [['feeder', 'Feeder', (v) => `#${v + 1}`]],

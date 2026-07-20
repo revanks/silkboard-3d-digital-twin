@@ -68,8 +68,8 @@ export default function GridSubstation({ grid, onAssetClick }) {
       <Label
         pos={[sub.x, baseY + YARD_H + 34, sub.z]}
         text="SUBSTATION"
-        sub={`${sub.nTransformers} transformers · ${sub.totalCustomers.toLocaleString()} customers`}
-        width={90}
+        sub={`${sub.id} · ${sub.nTransformers} transformers · ${sub.totalCustomers.toLocaleString()} customers`}
+        width={110}
       />
     </group>
   )

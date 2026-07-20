@@ -1,8 +1,9 @@
-import React, { useMemo, useRef, useLayoutEffect } from 'react'
+import React, { useMemo, useRef, useLayoutEffect, useCallback } from 'react'
 import * as THREE from 'three'
 import { inBounds } from '../osm/geo.js'
 import { riskColor, feederColor } from './gridColors.js'
 import { reliefY } from './relief.js'
+import AssetIdLabels from './AssetIdLabels.jsx'
 
 // Typical pole-mounted distribution-transformer platform height in Indian LT networks.
 const MOUNT_Y = 5.5
@@ -29,7 +30,7 @@ function tankColor(rec, colorMode, riskRange) {
   return '#3f5a44'
 }
 
-export default function GridTransformers({ grid, colorMode, onAssetClick }) {
+export default function GridTransformers({ grid, colorMode, onAssetClick, showLabels = true }) {
   const items = useMemo(() => grid.transformers.filter((t) => inBounds(t.x, t.z)), [grid])
   const riskRange = grid.meta.ranges.transformer.risk
 
@@ -53,20 +54,31 @@ export default function GridTransformers({ grid, colorMode, onAssetClick }) {
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
   }, [items, colorMode, riskRange])
 
+  const getPos = useCallback((t) => {
+    const [, h] = scaleFor(t.kva)
+    return [t.x, MOUNT_Y + h + reliefY(t.y), t.z]
+  }, [])
+  const getColor = useCallback((t) => tankColor(t, colorMode, riskRange), [colorMode, riskRange])
+
   if (!items.length) return null
   return (
-    <instancedMesh
-      ref={ref}
-      args={[undefined, undefined, items.length]}
-      castShadow
-      onClick={(e) => {
-        e.stopPropagation()
-        const rec = items[e.instanceId]
-        if (rec) onAssetClick?.('transformer', rec)
-      }}
-    >
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial roughness={0.6} metalness={0.35} />
-    </instancedMesh>
+    <>
+      <instancedMesh
+        ref={ref}
+        args={[undefined, undefined, items.length]}
+        castShadow
+        onClick={(e) => {
+          e.stopPropagation()
+          const rec = items[e.instanceId]
+          if (rec) onAssetClick?.('transformer', rec)
+        }}
+      >
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial roughness={0.6} metalness={0.35} />
+      </instancedMesh>
+      {showLabels && (
+        <AssetIdLabels items={items} getPos={getPos} getColor={getColor} radius={180} maxCount={40} labelHeight={2.2} />
+      )}
+    </>
   )
 }

@@ -29,6 +29,8 @@ export default function Overlay({
   setShowGrid,
   colorMode,
   setColorMode,
+  showLabels,
+  setShowLabels,
 }) {
   return (
     <div className="overlay">
@@ -78,6 +80,11 @@ export default function Overlay({
                   </button>
                 ))}
               </div>
+            )}
+            {showGrid && (
+              <button className={showLabels ? 'active' : ''} onClick={() => setShowLabels((v) => !v)}>
+                🏷 ID LABELS {showLabels ? 'ON' : 'OFF'}
+              </button>
             )}
           </>
         )}

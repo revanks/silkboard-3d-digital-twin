@@ -29,6 +29,7 @@ export default function CityScene({
   grid = null,
   showGrid = true,
   colorMode = 'realistic',
+  showLabels = true,
   onAssetClick,
 }) {
   const sun = sunDirection()
@@ -68,6 +69,7 @@ export default function CityScene({
           grid={grid}
           showGrid={showGrid}
           colorMode={colorMode}
+          showLabels={showLabels}
           onAssetClick={onAssetClick}
         />
       ) : (

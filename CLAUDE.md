@@ -262,10 +262,53 @@ LESSON: `CameraRig.jsx`'s `topView` toggle snaps `CAMERA_START`/`CAMERA_TARGET` 
 **every** toggle, including toggling it back off — don't touch TOP VIEW mid-verification-sequence if
 you've manually panned/zoomed, it silently discards the camera state.
 
-**Known, deliberate gap**: feeders (3 real 11kV backbones) have no dedicated 3D geometry — GridSense
-never modeled real conductor attachment-height/material for them, only for pole/transformer/lt_line/
-service_drop/meter. Feeder membership only drives the "FEEDER" color-mode grouping on poles/transformers.
-Confirmed as a deliberate honesty choice (via `AskUserQuestion` in the parent session), not an oversight.
+**Known, deliberate gap**: feeders (3 real 11kV backbones) have no dedicated 3D conductor geometry —
+GridSense never modeled real attachment-height/material for them, only for pole/transformer/lt_line/
+service_drop/meter. Confirmed as a deliberate honesty choice (via `AskUserQuestion` in the parent
+session), not an oversight. They DO now get a small floating marker + label (see below) — that's just
+an ID tag at the feeder's path midpoint, not an attempt at real conductor geometry.
+
+## Distance-based asset-ID labels + bigger/thicker geometry (2026-07-20)
+
+User asked for every one of the ~26,370 real assets (1 substation / 3 feeders / 3 reclosers /
+9 sectionalizers / 40 transformers / 8,668 poles / 5,972 LT lines / 5,837 service drops / 5,837
+meters) to be clearly visible with its real asset ID showing. Confirmed via `AskUserQuestion`
+(permanently labeling all ~26k at once would be an unreadable, unusably slow wall of text): went
+with **distance-based auto-labels** (labels appear only for assets near the camera, recomputed a few
+times a second not every frame) + **thicker/bigger geometry** for visual distinctness.
+
+- **New `src/scene/grid/AssetIdLabels.jsx`** — generic, reused by every Grid* component. Takes
+  `items`, `getPos(item)`, `getColor(item)` (so the label chip's accent border matches whatever color
+  mode is currently active — verified: switching REALISTIC/RISK/FEEDER live-recolors the label chips,
+  not just the meshes), `radius`, `maxCount`. Every ~0.25s (not every frame — 8,668 simple squared-
+  distance checks at 4Hz is cheap; at 60Hz it'd be wasteful), computes the nearest `maxCount` items
+  within `radius` of the camera and renders just those as small canvas-texture sprites showing the
+  real full `record.id` string (no truncation/abbreviation — matches what `GridInspectPanel` already
+  shows on click). A `sameIds` check skips the React state update when the visible set hasn't changed
+  (camera stationary), avoiding needless re-renders.
+- Wired into `GridPoles`/`GridTransformers`/`GridLtLines`/`GridServiceDrops`/`GridMeters`/
+  `GridSwitchgear` (each passes its own already-computed color function through, so labels and meshes
+  never disagree on color). Reclosers/sectionalizers (only 12 total) use an effectively-infinite radius
+  since there's no clutter risk at that count.
+- **New `src/scene/grid/GridFeederLabels.jsx`** — feeders had zero object representation before this
+  (only a color-mode grouping key). Adds a small floating marker (feeder-colored octahedron) + real ID
+  label at each feeder's path midpoint. Deliberately NOT full conductor geometry — stays inside the
+  existing documented gap above.
+- `GridSubstation`'s existing hero label gained the real substation ID on its sub-line.
+- **Geometry thickened for visibility** (was near-imperceptible at typical city-view zoom):
+  pole radius scale 0.3→0.5, meter box 0.3→0.45, LT-line ribbon thickness 0.09→0.14, service-drop
+  ribbon thickness 0.045→0.08. Transformers/reclosers/sectionalizers were already large enough, left
+  unchanged.
+- New Overlay button "🏷 ID LABELS ON/OFF" (`showLabels` state in `App.jsx`, threaded through
+  `CityScene`→`OsmWorld`→`GridNetwork`→every Grid* component), default ON.
+- `GridInspectPanel.jsx` gained a `feeder` entry (TYPE_LABEL + FIELD_DEFS) so clicking a new feeder
+  marker opens a real inspect panel instead of an empty one.
+- **Verified** via headed Playwright (not headless — the standing WebGL-in-headless finding still
+  applies): zoomed toward a dense pole cluster, confirmed real IDs (e.g. `PL_BLR_SOUTH_008403`,
+  `PL_BLR_SOUTH_008356`) render legibly; toggled RISK and FEEDER color modes and confirmed label chip
+  borders recolor along with the meshes; toggled the ID LABELS button off then back on and confirmed
+  labels actually disappear/reappear; zero new console errors (only the pre-existing harmless favicon
+  404). `npm run build` clean; `dist/` rebuilt and recommitted per the no-Node deployment note above.
 
 **Repo note**: this folder has its own `.gitignore`'d `media/` now (added this session — a pre-existing
 ~230 MB `media/silkboard_digital_twin_tour.mp4` exceeds GitHub's 100 MB single-file push limit;
